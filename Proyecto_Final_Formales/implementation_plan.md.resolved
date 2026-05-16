@@ -1,0 +1,667 @@
+# Plan de Implementación — Intérprete MathLite
+
+## Resumen
+
+Construcción de un intérprete completo para el DSL **MathLite** siguiendo las fases clásicas de compilación. Backend en **Spring Boot** (Java 17+), frontend en **React**, persistencia en **MongoDB Atlas**.
+
+---
+
+## Arquitectura General
+
+```mermaid
+graph TB
+    subgraph Frontend ["Frontend — React + Vite"]
+        Editor["Editor de Código<br/>(CodeMirror/Monaco)"]
+        Console["Consola de Salida"]
+        ASTViz["Visualización AST<br/>(D3.js / react-d3-tree)"]
+        Diag["Panel de Diagnósticos"]
+    end
+
+    subgraph Backend ["Backend — Spring Boot"]
+        API["REST Controller<br/>/api/interpret"]
+        Lexer["Lexer<br/>(Analizador Léxico)"]
+        Parser["Parser<br/>(Recursive Descent)"]
+        Semantic["Semantic Analyzer<br/>(Visitor)"]
+        Interpreter["Interpreter<br/>(AST Walker)"]
+        Persistence["Persistence Layer<br/>(MongoDB)"]
+    end
+
+    subgraph Cloud ["Cloud — MongoDB Atlas"]
+        DB[(MongoDB Atlas)]
+    end
+
+    Editor -->|POST code| API
+    API --> Lexer
+    Lexer -->|Tokens| Parser
+    Parser -->|AST| Semantic
+    Semantic -->|Validated AST| Interpreter
+    Interpreter -->|Results| API
+    API -->|JSON Response| Console
+    API -->|AST JSON| ASTViz
+    API --> Persistence
+    Persistence --> DB
+```
+
+---
+
+## Stack Tecnológico
+
+| Componente | Tecnología | Justificación |
+|---|---|---|
+| Backend | Spring Boot 3.x + Java 21 | Framework robusto, REST nativo, inyección de dependencias |
+| Frontend | React 18 + Vite | SPA moderna, hot reload, ecosistema rico |
+| Editor de código | Monaco Editor | El mismo motor de VS Code, syntax highlighting personalizable |
+| Visualización AST | react-d3-tree | Renderizado interactivo de árboles |
+| Base de datos | MongoDB Atlas | NoSQL en la nube, tier gratuito, Spring Data MongoDB |
+| Despliegue | Render / Railway | Free tier, integración con Git |
+| Testing | JUnit 5 + Mockito | Estándar Java para tests |
+
+---
+
+## Estructura del Proyecto
+
+```
+mathlite/
+├── mathlite-backend/                          # Spring Boot
+│   ├── pom.xml
+│   ├── src/main/java/com/mathlite/
+│   │   ├── MathLiteApplication.java           # Entry point
+│   │   │
+│   │   ├── lexer/                             # FASE 2 — Analizador Léxico
+│   │   │   ├── Token.java                     # Record: type, lexeme, line, column
+│   │   │   ├── TokenType.java                 # Enum con 45 categorías
+│   │   │   └── Lexer.java                     # Scanner con AFD manual
+│   │   │
+│   │   ├── parser/                            # FASE 3 — Parser + AST
+│   │   │   ├── Parser.java                    # Recursive Descent Parser LL(1)
+│   │   │   └── ParseError.java               # Excepciones sintácticas
+│   │   │
+│   │   ├── ast/                               # Nodos del AST
+│   │   │   ├── ASTNode.java                   # Interfaz base (sealed)
+│   │   │   ├── BinOpNode.java                 # Operación binaria
+│   │   │   ├── UnaryOpNode.java               # Operación unaria (not, -)
+│   │   │   ├── NumberNode.java                # Literal numérico (int/real)
+│   │   │   ├── BoolNode.java                  # Literal booleano
+│   │   │   ├── StringNode.java                # Literal string
+│   │   │   ├── VariableNode.java              # Referencia a variable
+│   │   │   ├── AssignNode.java                # let x = expr
+│   │   │   ├── FuncDefNode.java               # def nombre(params) { body }
+│   │   │   ├── FuncCallNode.java              # nombre(args)
+│   │   │   ├── IfNode.java                    # if/else
+│   │   │   ├── WhileNode.java                 # while
+│   │   │   ├── PrintNode.java                 # print(expr)
+│   │   │   ├── BlockNode.java                 # Bloque de sentencias
+│   │   │   ├── ReturnNode.java                # return expr
+│   │   │   └── ASTVisitor.java                # Visitor interface
+│   │   │
+│   │   ├── semantic/                          # FASE 4 — Análisis Semántico
+│   │   │   ├── SemanticAnalyzer.java          # Visitor semántico
+│   │   │   ├── SymbolTable.java               # Tabla de símbolos con scopes
+│   │   │   ├── Symbol.java                    # Entrada en la tabla
+│   │   │   └── SemanticError.java             # Errores semánticos
+│   │   │
+│   │   ├── interpreter/                       # FASE 5 — Intérprete
+│   │   │   ├── Interpreter.java               # AST Walker (Visitor)
+│   │   │   ├── Environment.java               # Entornos anidados (scoping)
+│   │   │   ├── MathLiteValue.java             # Wrapper de valores runtime
+│   │   │   ├── BuiltinFunctions.java          # sin, cos, tan, sqrt, log, abs, floor, ceil
+│   │   │   ├── ReturnException.java           # Mecanismo de return via excepción
+│   │   │   └── RuntimeError.java              # Errores de ejecución
+│   │   │
+│   │   ├── controller/                        # REST API
+│   │   │   └── InterpreterController.java     # Endpoints
+│   │   │
+│   │   ├── dto/                               # Data Transfer Objects
+│   │   │   ├── ExecutionRequest.java          # { code: string }
+│   │   │   ├── ExecutionResponse.java         # { output, tokens, ast, errors, ... }
+│   │   │   └── ASTNodeDTO.java                # AST serializable para frontend
+│   │   │
+│   │   ├── model/                             # Modelos de persistencia
+│   │   │   └── ExecutionRecord.java           # Documento MongoDB
+│   │   │
+│   │   ├── repository/                        # Spring Data MongoDB
+│   │   │   └── ExecutionRepository.java
+│   │   │
+│   │   └── service/                           # Capa de servicio
+│   │       └── InterpreterService.java        # Orquesta el pipeline completo
+│   │
+│   └── src/test/java/com/mathlite/           # Tests
+│       ├── lexer/LexerTest.java
+│       ├── parser/ParserTest.java
+│       ├── semantic/SemanticAnalyzerTest.java
+│       ├── interpreter/InterpreterTest.java
+│       └── integration/IntegrationTest.java
+│
+└── mathlite-frontend/                         # React + Vite
+    ├── package.json
+    ├── vite.config.js
+    ├── index.html
+    ├── src/
+    │   ├── App.jsx
+    │   ├── main.jsx
+    │   ├── index.css
+    │   ├── components/
+    │   │   ├── CodeEditor.jsx               # Monaco Editor wrapper
+    │   │   ├── OutputConsole.jsx             # Consola de resultados
+    │   │   ├── ASTViewer.jsx                # Visualización del árbol
+    │   │   ├── DiagnosticsPanel.jsx         # Errores por fase
+    │   │   ├── TokenTable.jsx               # Tabla de tokens
+    │   │   ├── Toolbar.jsx                  # Botones ejecutar, limpiar, ejemplos
+    │   │   └── Sidebar.jsx                  # Navegación/historial
+    │   ├── services/
+    │   │   └── api.js                       # Axios calls al backend
+    │   └── hooks/
+    │       └── useInterpreter.js            # Custom hook
+    └── public/
+```
+
+---
+
+## Diseño Detallado del AST (Fase 3)
+
+### Jerarquía de Nodos
+
+```mermaid
+classDiagram
+    class ASTNode {
+        <<sealed interface>>
+        +accept(ASTVisitor visitor) Object
+        +int line()
+        +int column()
+    }
+
+    class NumberNode {
+        +double value
+        +boolean isInteger
+    }
+
+    class BoolNode {
+        +boolean value
+    }
+
+    class StringNode {
+        +String value
+    }
+
+    class VariableNode {
+        +String name
+    }
+
+    class BinOpNode {
+        +ASTNode left
+        +TokenType operator
+        +ASTNode right
+    }
+
+    class UnaryOpNode {
+        +TokenType operator
+        +ASTNode operand
+    }
+
+    class AssignNode {
+        +String name
+        +ASTNode value
+    }
+
+    class FuncDefNode {
+        +String name
+        +List~String~ params
+        +BlockNode body
+    }
+
+    class FuncCallNode {
+        +String name
+        +List~ASTNode~ arguments
+    }
+
+    class IfNode {
+        +ASTNode condition
+        +BlockNode thenBranch
+        +BlockNode elseBranch
+    }
+
+    class WhileNode {
+        +ASTNode condition
+        +BlockNode body
+    }
+
+    class PrintNode {
+        +ASTNode expression
+    }
+
+    class ReturnNode {
+        +ASTNode value
+    }
+
+    class BlockNode {
+        +List~ASTNode~ statements
+    }
+
+    ASTNode <|.. NumberNode
+    ASTNode <|.. BoolNode
+    ASTNode <|.. StringNode
+    ASTNode <|.. VariableNode
+    ASTNode <|.. BinOpNode
+    ASTNode <|.. UnaryOpNode
+    ASTNode <|.. AssignNode
+    ASTNode <|.. FuncDefNode
+    ASTNode <|.. FuncCallNode
+    ASTNode <|.. IfNode
+    ASTNode <|.. WhileNode
+    ASTNode <|.. PrintNode
+    ASTNode <|.. ReturnNode
+    ASTNode <|.. BlockNode
+```
+
+### Definición Java de los Nodos
+
+Usaremos **Java Records** (Java 17+) para los nodos del AST, ya que son inmutables y concisos:
+
+```java
+// Interfaz base sellada
+public sealed interface ASTNode
+    permits NumberNode, BoolNode, StringNode, VariableNode,
+            BinOpNode, UnaryOpNode, AssignNode, FuncDefNode,
+            FuncCallNode, IfNode, WhileNode, PrintNode,
+            ReturnNode, BlockNode {
+    
+    int line();
+    int column();
+    <T> T accept(ASTVisitor<T> visitor);
+}
+
+// Ejemplo: BinOpNode
+public record BinOpNode(
+    ASTNode left,
+    TokenType operator,
+    ASTNode right,
+    int line,
+    int column
+) implements ASTNode {
+    @Override
+    public <T> T accept(ASTVisitor<T> visitor) {
+        return visitor.visitBinOp(this);
+    }
+}
+```
+
+### Visitor Interface
+
+```java
+public interface ASTVisitor<T> {
+    T visitNumber(NumberNode node);
+    T visitBool(BoolNode node);
+    T visitString(StringNode node);
+    T visitVariable(VariableNode node);
+    T visitBinOp(BinOpNode node);
+    T visitUnaryOp(UnaryOpNode node);
+    T visitAssign(AssignNode node);
+    T visitFuncDef(FuncDefNode node);
+    T visitFuncCall(FuncCallNode node);
+    T visitIf(IfNode node);
+    T visitWhile(WhileNode node);
+    T visitPrint(PrintNode node);
+    T visitReturn(ReturnNode node);
+    T visitBlock(BlockNode node);
+}
+```
+
+---
+
+## Diseño del Parser Recursivo Descendente (Fase 3)
+
+### Gramática LL(1) — Mapeo a Métodos
+
+Cada regla de producción de la gramática EBNF se mapea a un método del parser:
+
+| Producción EBNF | Método Java | Descripción |
+|---|---|---|
+| `program → statement*` | `parseProgram()` | Punto de entrada |
+| `statement → assignStmt \| funcDef \| ifStmt \| whileStmt \| printStmt \| returnStmt \| exprStmt` | `parseStatement()` | Despacho por token actual |
+| `assignStmt → 'let' ID '=' expr` | `parseAssign()` | Declaración de variable |
+| `funcDef → 'def' ID '(' params ')' '{' block '}'` | `parseFuncDef()` | Definición de función |
+| `ifStmt → 'if' expr '{' block '}' ('else' '{' block '}')?` | `parseIf()` | Condicional |
+| `whileStmt → 'while' expr '{' block '}'` | `parseWhile()` | Ciclo |
+| `printStmt → 'print' '(' expr ')'` | `parsePrint()` | Salida |
+| `returnStmt → 'return' expr` | `parseReturn()` | Retorno |
+| `block → statement*` | `parseBlock()` | Bloque de sentencias |
+| `expr → orExpr` | `parseExpression()` | Entrada a expresiones |
+| `orExpr → andExpr ('or' andExpr)*` | `parseOr()` | OR lógico |
+| `andExpr → comparison ('and' comparison)*` | `parseAnd()` | AND lógico |
+| `comparison → addition (('==' \| '!=' \| '<' \| '>' \| '<=' \| '>=') addition)*` | `parseComparison()` | Comparaciones |
+| `addition → multiplication (('+' \| '-') multiplication)*` | `parseAddition()` | Suma/Resta |
+| `multiplication → power (('*' \| '/' \| '%') power)*` | `parseMultiplication()` | Multiplicación/División |
+| `power → unary ('^' unary)*` | `parsePower()` | Potenciación |
+| `unary → ('-' \| 'not') unary \| call` | `parseUnary()` | Negación |
+| `call → primary ('(' arguments ')')?` | `parseCall()` | Llamada a función |
+| `primary → NUMBER \| STRING \| BOOL \| ID \| '(' expr ')'` | `parsePrimary()` | Literales y agrupación |
+
+### Precedencia de Operadores (menor a mayor)
+
+```
+1. or
+2. and
+3. ==  !=  <  >  <=  >=
+4. +  -
+5. *  /  %
+6. ^
+7. not  - (unario)
+8. llamada a función
+9. literales / paréntesis
+```
+
+### Estructura del Parser
+
+```java
+public class Parser {
+    private final List<Token> tokens;
+    private int current = 0;
+    private final List<ParseError> errors = new ArrayList<>();
+
+    public Parser(List<Token> tokens) {
+        this.tokens = tokens;
+    }
+
+    public BlockNode parse() {
+        return parseProgram();
+    }
+
+    // --- Métodos auxiliares ---
+    private Token peek()       { return tokens.get(current); }
+    private Token previous()   { return tokens.get(current - 1); }
+    private boolean isAtEnd()  { return peek().type() == TokenType.EOF; }
+    private Token advance()    { if (!isAtEnd()) current++; return previous(); }
+    
+    private boolean check(TokenType type) {
+        return !isAtEnd() && peek().type() == type;
+    }
+    
+    private boolean match(TokenType... types) {
+        for (TokenType type : types) {
+            if (check(type)) { advance(); return true; }
+        }
+        return false;
+    }
+    
+    private Token consume(TokenType type, String message) {
+        if (check(type)) return advance();
+        throw error(peek(), message);
+    }
+
+    // --- Métodos de parsing (uno por producción) ---
+    private BlockNode parseProgram() { ... }
+    private ASTNode parseStatement() { ... }
+    // ... etc
+}
+```
+
+---
+
+## Pipeline de Ejecución
+
+```mermaid
+sequenceDiagram
+    participant User as Usuario
+    participant FE as React Frontend
+    participant BE as Spring Boot
+    participant L as Lexer
+    participant P as Parser
+    participant S as SemanticAnalyzer
+    participant I as Interpreter
+    participant DB as MongoDB Atlas
+
+    User->>FE: Escribe código MathLite
+    User->>FE: Click "Ejecutar"
+    FE->>BE: POST /api/interpret { code }
+    
+    BE->>L: tokenize(code)
+    L-->>BE: List<Token> + errores léxicos
+    
+    alt Sin errores léxicos
+        BE->>P: parse(tokens)
+        P-->>BE: AST + errores sintácticos
+    end
+    
+    alt Sin errores sintácticos
+        BE->>S: analyze(ast)
+        S-->>BE: AST validado + errores semánticos
+    end
+    
+    alt Sin errores semánticos
+        BE->>I: interpret(ast)
+        I-->>BE: output + errores runtime
+    end
+    
+    BE->>DB: save(ExecutionRecord)
+    BE-->>FE: ExecutionResponse JSON
+    FE-->>User: Muestra resultados
+```
+
+---
+
+## API REST
+
+### Endpoints
+
+| Método | Ruta | Descripción |
+|---|---|---|
+| `POST` | `/api/interpret` | Ejecuta código MathLite completo |
+| `POST` | `/api/tokenize` | Solo fase léxica (para diagnóstico) |
+| `POST` | `/api/parse` | Léxico + Sintáctico (retorna AST JSON) |
+| `GET` | `/api/history` | Historial de ejecuciones desde MongoDB |
+| `GET` | `/api/history/{id}` | Detalle de una ejecución |
+| `DELETE` | `/api/history/{id}` | Eliminar un registro |
+
+### Response JSON de `/api/interpret`
+
+```json
+{
+  "success": true,
+  "output": ["7.5", "1", "4", "9", "16", "25"],
+  "tokens": [
+    { "type": "LET", "lexeme": "let", "line": 1, "column": 1 },
+    ...
+  ],
+  "ast": {
+    "type": "BlockNode",
+    "children": [
+      {
+        "type": "AssignNode",
+        "name": "base",
+        "value": { "type": "NumberNode", "value": 5 }
+      },
+      ...
+    ]
+  },
+  "errors": {
+    "lexical": [],
+    "syntactic": [],
+    "semantic": [],
+    "runtime": []
+  },
+  "executionTimeMs": 12
+}
+```
+
+---
+
+## Modelo de Persistencia (MongoDB Atlas)
+
+### Documento `ExecutionRecord`
+
+```json
+{
+  "_id": "ObjectId(...)",
+  "code": "let x = 5\nprint(x + 3)",
+  "output": ["8"],
+  "tokens": [...],
+  "astJson": {...},
+  "errors": {
+    "lexical": [],
+    "syntactic": [],
+    "semantic": [],
+    "runtime": []
+  },
+  "success": true,
+  "executionTimeMs": 8,
+  "createdAt": "2026-05-14T20:00:00Z"
+}
+```
+
+---
+
+## Frontend React — Diseño de UI
+
+### Layout Principal
+
+```
+┌──────────────────────────────────────────────────────┐
+│  🧮 MathLite Interpreter           [Historial] [?]  │
+├────────────────────────┬─────────────────────────────┤
+│                        │  📊 AST Viewer              │
+│  📝 Code Editor        │  (árbol interactivo)        │
+│  (Monaco Editor)       │                             │
+│                        │                             │
+│                        ├─────────────────────────────┤
+│                        │  📋 Tokens Table            │
+│  [▶ Ejecutar] [🗑 Clear]│  tipo | lexema | línea     │
+├────────────────────────┼─────────────────────────────┤
+│  💻 Console Output     │  ⚠️ Diagnostics Panel       │
+│  > 7.5                 │  [Léxico][Sintáctico]       │
+│  > 1                   │  [Semántico][Runtime]       │
+│  > 4                   │                             │
+└────────────────────────┴─────────────────────────────┘
+```
+
+### Características del Frontend
+
+1. **Monaco Editor** con syntax highlighting personalizado para MathLite
+2. **Visualización AST** interactiva con zoom, pan, y tooltips
+3. **Consola** con output formateado y colores por tipo de mensaje
+4. **Panel de diagnósticos** con tabs por fase de compilación
+5. **Tabla de tokens** con filtrado y búsqueda
+6. **Historial** de ejecuciones (desde MongoDB)
+7. **Ejemplos precargados** (factorial, área, trigonometría)
+8. **Dark mode** por defecto con diseño moderno
+
+---
+
+## Propuesta de Cambios por Fase
+
+### Fase 3 — Parser + AST (ACTUAL — 25%)
+
+#### [NEW] Paquete `ast/` — Nodos del AST
+- `ASTNode.java` — Sealed interface base
+- `NumberNode.java`, `BoolNode.java`, `StringNode.java` — Literales
+- `VariableNode.java` — Referencias a variables
+- `BinOpNode.java`, `UnaryOpNode.java` — Operaciones
+- `AssignNode.java` — Declaración `let`
+- `FuncDefNode.java`, `FuncCallNode.java` — Funciones
+- `IfNode.java`, `WhileNode.java` — Control de flujo
+- `PrintNode.java`, `ReturnNode.java`, `BlockNode.java` — Otros
+- `ASTVisitor.java` — Patrón Visitor genérico
+
+#### [NEW] Paquete `parser/`
+- `Parser.java` — Recursive Descent Parser con 18+ métodos
+- `ParseError.java` — Clase de error sintáctico con línea/columna/mensaje
+
+---
+
+### Fase 4 — Análisis Semántico (20%)
+
+#### [NEW] Paquete `semantic/`
+- `SemanticAnalyzer.java` — Implementa `ASTVisitor<Void>`, valida reglas semánticas
+- `SymbolTable.java` — Tabla de símbolos con stack de scopes
+- `Symbol.java` — Record con nombre, tipo inferido, scope
+- `SemanticError.java` — 6+ categorías de errores
+
+---
+
+### Fase 5 — Intérprete (20%)
+
+#### [NEW] Paquete `interpreter/`
+- `Interpreter.java` — Implementa `ASTVisitor<MathLiteValue>`, evalúa nodo a nodo
+- `Environment.java` — Map anidado para variables locales/globales
+- `MathLiteValue.java` — Wrapper para valores runtime (Int, Real, Bool, String)
+- `BuiltinFunctions.java` — Funciones matemáticas integradas
+- `ReturnException.java` — Mecanismo de control para `return`
+- `RuntimeError.java` — Errores de ejecución
+
+---
+
+### Fase 6 — Web y Pruebas (10%)
+
+#### [NEW] `mathlite-frontend/` — Aplicación React
+- Editor Monaco con syntax highlighting MathLite
+- Visualización AST interactiva
+- Consola, diagnósticos, historial
+
+#### [NEW] Paquetes `controller/`, `dto/`, `service/`, `model/`, `repository/`
+- API REST Spring Boot
+- Integración con MongoDB Atlas
+- DTOs para serialización
+
+---
+
+## User Review Required
+
+> [!IMPORTANT]
+> **Base de datos**: ¿Prefieren **MongoDB Atlas** o **Firebase Firestore**? Ambas son válidas. MongoDB Atlas tiene mejor integración con Spring Boot via Spring Data MongoDB. Firebase requiere el SDK de Firebase Admin.
+
+> [!IMPORTANT]
+> **Lexer existente**: ¿Ya tienen el código Java del Lexer implementado? Si es así, necesito verlo para integrar con el parser. Si solo tienen la especificación, lo construiremos desde cero siguiendo los AFDs documentados.
+
+> [!IMPORTANT]
+> **Despliegue**: ¿Tienen preferencia entre **Render**, **Railway**, o **GCP**? Para el tier gratuito, Render es el más sencillo.
+
+## Open Questions
+
+> [!WARNING]
+> **Reasignación de variables**: En el ejemplo del spec, dentro del `while` se usa `let i = i + 1`. ¿Esto es una **reasignación** o una **nueva declaración** en scope interior? Esto afecta el diseño del `AssignNode` y el manejo de scopes. Mi propuesta: tratarlo como reasignación si la variable ya existe.
+
+> [!NOTE]
+> **Java Version**: Recomiendo Java 17+ para usar **sealed interfaces** y **records** en los nodos del AST. ¿Tienen Java 17 o superior instalado?
+
+> [!NOTE]
+> **Proyecto Maven vs Gradle**: Recomiendo **Maven** con Spring Initializr para el backend. ¿Están de acuerdo?
+
+---
+
+## Verificación
+
+### Tests Automatizados (25+ casos)
+
+```
+Categoría                 | Cantidad | Ejemplos
+--------------------------|----------|------------------------------------------
+Expresiones válidas       | 5        | Precedencia, paréntesis, potencia
+Factorial recursivo       | 1        | def factorial(n) { ... }
+Ciclo acumulador          | 1        | while con suma
+Trigonometría             | 2        | sin, cos, sqrt
+Funciones compuestas      | 1        | Función llamando función
+Errores léxicos           | 3        | Carácter inválido, string sin cerrar
+Errores sintácticos       | 4        | Paréntesis, llaves, if sin condición
+Errores semánticos        | 5        | Variable no declarada, aridad, tipos, return fuera
+Errores runtime           | 3        | División por cero, función inexistente, args inválidos
+```
+
+### Verificación Manual
+- Ejecutar la aplicación web localmente
+- Probar los programas de ejemplo del spec
+- Verificar la visualización del AST
+- Confirmar la persistencia en MongoDB Atlas
+
+### Comandos de Verificación
+
+```bash
+# Backend
+cd mathlite-backend
+mvn clean test                    # Ejecutar los 25+ tests
+mvn spring-boot:run               # Levantar el servidor
+
+# Frontend
+cd mathlite-frontend
+npm install
+npm run dev                       # Servidor de desarrollo
+npm run build                     # Build de producción
+```

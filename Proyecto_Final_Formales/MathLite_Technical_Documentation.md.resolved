@@ -1,0 +1,134 @@
+# Documentación Técnica — Intérprete MathLite
+
+Este documento detalla la estructura, propósito y responsabilidades de cada clase y método implementado en el esqueleto del proyecto MathLite. 
+También incluye una verificación estática de posibles errores u observaciones en la base de código actual.
+
+---
+
+## 1. Arquitectura y Paquetes
+
+El proyecto sigue una arquitectura por capas clásica de compiladores, integrada dentro de una aplicación Spring Boot para exponerse como una API REST.
+
+- **`com.mathlite.lexer`**: Analizador léxico (Fase 2). Convierte texto plano a tokens.
+- **`com.mathlite.ast`**: Clases de datos que representan el Árbol de Sintaxis Abstracta (AST).
+- **`com.mathlite.parser`**: Analizador sintáctico (Fase 3). Convierte tokens a un AST.
+- **`com.mathlite.semantic`**: Analizador semántico (Fase 4). Valida las reglas del lenguaje.
+- **`com.mathlite.interpreter`**: Intérprete (Fase 5). Ejecuta el AST y produce resultados.
+- **`com.mathlite.dto` / `controller` / `service` / `model` / `repository`**: Capa web y de persistencia de Spring Boot.
+
+---
+
+## 2. Detalle de Clases y Métodos
+
+### Paquete: `com.mathlite.lexer`
+
+#### `TokenType` (Enum)
+Define las 45 categorías de tokens del lenguaje según la especificación.
+- **Literales**: `INTEGER_LITERAL`, `REAL_LITERAL`, `STRING_LITERAL`, `TRUE`, `FALSE`.
+- **Palabras reservadas**: `LET`, `DEF`, `IF`, `WHILE`, etc.
+- **Operadores y Delimitadores**: `PLUS`, `MINUS`, `EQUAL_EQUAL`, `LPAREN`, etc.
+
+#### `Token` (Record)
+Representa una unidad léxica extraída del código.
+- **Campos**: `type` (TokenType), `lexeme` (String), `line` (int), `column` (int).
+
+#### `Lexer` (Class)
+Realiza el análisis léxico leyendo el código fuente carácter por carácter mediante un autómata finito determinista (AFD) programado manualmente.
+- `tokenize()`: Inicia el ciclo de escaneo hasta llegar al final del archivo (`EOF`).
+- `scanToken()`: Método central del AFD. Usa un bloque `switch` sobre el carácter actual para decidir qué tipo de token crear.
+- `scanNumber()`, `scanIdentifier()`, `scanString()`: Sub-rutinas para procesar lexemas de longitud variable.
+- `reportError(message)`: Recopila errores léxicos sin detener la ejecución (recovery).
+
+---
+
+### Paquete: `com.mathlite.ast`
+
+Implementa los 14 tipos de nodos del AST utilizando *sealed interfaces* y *records* de Java para asegurar inmutabilidad y exhaustividad.
+
+#### `ASTNode` (Sealed Interface)
+Interfaz base que define el contrato para todos los nodos.
+- `line()`, `column()`: Devuelven la posición del nodo en el código.
+- `accept(ASTVisitor<T> visitor)`: Implementación clave del Patrón Visitor para permitir recorridos (dispatch doble).
+
+#### Nodos de Literales y Variables
+- **`NumberNode`**, **`BoolNode`**, **`StringNode`**: Almacenan el valor primitivo.
+- **`VariableNode`**: Almacena el nombre de la variable (`name`).
+
+#### Nodos de Operaciones
+- **`BinOpNode`**: Operación de dos operandos (`left`, `operator`, `right`).
+- **`UnaryOpNode`**: Operador aplicado a un operando (`operator`, `operand`).
+
+#### Nodos de Control y Sentencias
+- **`AssignNode`**: Asignación `let` (`name`, `value`).
+- **`FuncDefNode`**: Definición `def` (`name`, `params`, `body`).
+- **`FuncCallNode`**: Llamada a función (`name`, `arguments`).
+- **`IfNode`**: Condicional (`condition`, `thenBranch`, `elseBranch`).
+- **`WhileNode`**: Ciclo (`condition`, `body`).
+- **`PrintNode`**, **`ReturnNode`**, **`BlockNode`**.
+
+#### `ASTVisitor<T>` (Interface)
+Define un método `visit...()` para cada tipo concreto de nodo. Es implementada por `SemanticAnalyzer` y `Interpreter`.
+
+---
+
+### Paquete: `com.mathlite.parser`
+
+#### `Parser` (Class)
+Analizador sintáctico Descendente Recursivo LL(1). Su trabajo es construir el AST a partir de la lista de tokens.
+- `parse()`: Punto de entrada, devuelve un `BlockNode` que representa todo el programa.
+- `parseStatement()`: Despacha hacia el método de parsing adecuado basándose en el token actual (`let` -> `parseAssign`, `if` -> `parseIf`, etc.).
+- Métodos de precedencia: `parseExpression()`, `parseOr()`, `parseAnd()`, `parseComparison()`, `parseAddition()`, `parseMultiplication()`, `parsePower()`, `parseUnary()`, `parseCall()`, `parsePrimary()`. Garantizan el orden correcto de las operaciones.
+- `synchronize()`: Mecanismo de recuperación de errores (Panic Mode) que descarta tokens hasta encontrar el inicio de una nueva sentencia confiable.
+
+#### `ParseError` (Exception)
+Excepción personalizada que incluye línea y columna del error.
+
+---
+
+### Paquete: `com.mathlite.semantic`
+
+#### `SemanticAnalyzer` (Class)
+Implementa `ASTVisitor<Void>`. Recorre el AST generado por el parser verificando reglas semánticas, sin modificarlo ni ejecutarlo.
+- Métodos `visit...`: Realizan validaciones, como comprobar que una variable en `VariableNode` existe en la `SymbolTable`.
+- Categorías de error gestionadas: `UNDECLARED_VARIABLE`, `UNDECLARED_FUNCTION`, `ARITY_MISMATCH`, `RETURN_OUTSIDE_FUNCTION`.
+
+#### `SymbolTable` (Class) y `Symbol` (Record)
+Gestiona el ámbito (scope) de las variables y funciones.
+- Utiliza una pila (Stack `Deque`) de `Map<String, Symbol>`.
+- `enterScope()` / `exitScope()`: Manejan la creación y destrucción de ámbitos locales.
+- `define()`, `resolve()`: Registran y buscan variables en los ámbitos disponibles.
+
+---
+
+### Paquete: `com.mathlite.interpreter`
+
+#### `Interpreter` (Class)
+Implementa `ASTVisitor<MathLiteValue>`. Ejecuta dinámicamente el AST nodo a nodo.
+- `visitBinOp()`: Evalúa sub-árboles y realiza la operación matemática real.
+- `visitIf()`, `visitWhile()`: Evalúan la condición y ejecutan condicionalmente o en ciclo los bloques asociados.
+- No utiliza `eval()` de JavaScript u otro lenguaje; toda la matemática se realiza de forma estricta en Java.
+
+#### `Environment` (Class)
+Memoria de ejecución de MathLite. Guarda los valores reales de las variables.
+- Funciona como una cadena de Mapas anidados (similar a `SymbolTable`) para soportar *Lexical Scoping* (cierres).
+
+#### `MathLiteValue` (Class)
+Clase envoltorio (Wrapper) para los valores del lenguaje MathLite (INT, REAL, BOOL, STRING).
+- Proporciona métodos de conversión segura (`asInt()`, `asBool()`) y evaluación de "verdadero" lógico (`isTruthy()`).
+
+#### `BuiltinFunctions` (Class)
+Conecta las llamadas a `sin`, `cos`, etc. directamente con `java.lang.Math`.
+
+#### `ReturnException` (Exception)
+Truco arquitectónico para el manejo del `return`. Al ejecutar `return x`, se lanza esta excepción para salir instantáneamente del nivel actual de recursión en el Visitor, siendo capturada por el manejador de la función.
+
+---
+
+### Paquetes de Spring Boot (`controller`, `service`, `dto`, `model`)
+
+- **`InterpreterService`**: El orquestador. Llama a `Lexer -> Parser -> SemanticAnalyzer -> Interpreter` secuencialmente. Registra métricas de tiempo y guarda en la base de datos (MongoDB).
+- **`InterpreterController`**: Controlador REST que expone `/api/interpret`.
+- **`ExecutionRecord`**: Modelo de datos persistido en la colección de MongoDB con el código fuente y todos los resultados.
+- **`ASTNodeDTO`**: Serializador personalizado que toma el AST en memoria y lo convierte a Mapas exportables en JSON para el Frontend visualizador.
+
+
