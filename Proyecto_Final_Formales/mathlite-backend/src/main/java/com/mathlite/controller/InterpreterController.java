@@ -7,6 +7,7 @@ import com.mathlite.service.InterpreterService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import lombok.RequiredArgsConstructor;
 
 import java.util.List;
 
@@ -14,15 +15,12 @@ import java.util.List;
  * REST Controller que expone los endpoints del intérprete MathLite.
  */
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/api")
 @CrossOrigin(origins = {"http://localhost:5173", "http://localhost:3000"})
 public class InterpreterController {
 
     private final InterpreterService service;
-
-    public InterpreterController(InterpreterService service) {
-        this.service = service;
-    }
 
     /**
      * POST /api/interpret — Ejecuta código MathLite completo (todas las fases).

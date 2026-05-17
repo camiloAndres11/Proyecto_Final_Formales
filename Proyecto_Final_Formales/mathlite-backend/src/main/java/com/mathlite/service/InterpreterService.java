@@ -13,6 +13,7 @@ import com.mathlite.repository.ExecutionRepository;
 import com.mathlite.semantic.SemanticAnalyzer;
 import com.mathlite.semantic.SemanticError;
 import org.springframework.stereotype.Service;
+import lombok.RequiredArgsConstructor;
 
 import java.util.*;
 
@@ -21,13 +22,10 @@ import java.util.*;
  * Código fuente → Lexer → Parser → Semantic → Interpreter → Resultado
  */
 @Service
+@RequiredArgsConstructor
 public class InterpreterService {
 
     private final ExecutionRepository repository;
-
-    public InterpreterService(ExecutionRepository repository) {
-        this.repository = repository;
-    }
 
     /**
      * Ejecuta el pipeline completo de interpretación.
