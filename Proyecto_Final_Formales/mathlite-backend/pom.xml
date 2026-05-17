@@ -18,7 +18,7 @@
     <description>Intérprete para el DSL MathLite — Lenguajes Formales 2026-1</description>
 
     <properties>
-        <java.version>25</java.version>
+        <java.version>21</java.version>
     </properties>
 
     <dependencies>
