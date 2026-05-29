@@ -14,18 +14,27 @@ function highlightSyntax(code: string): string {
     .replace(/>/g, "&gt;");
 
   return escaped.replace(
-    /("(?:[^"\\]|\\.)*")|(\b(?:let|def|if|else|while|return|print|and|or|not|true|false|sin|cos|tan|sqrt|log|abs|floor|ceil)\b)|(\b\d+(?:\.\d+)?\b)|(--[^\n]*)|(\/\/[^\n]*)/g,
+    /("(?:[^"\\]|\\.)*")|(\b(?:let|def|if|else|while|return|print|and|or|not|true|false|sin|cos|tan|sqrt|log|abs|floor|ceil)\b)|(\b\d+(?:\.\d+)?\b)|(--[^\n]*)/g,
     (match, str, kw, num, comment) => {
-      if (comment) return `<span class="text-zinc-600 italic">${comment}</span>`;
-      if (str) return `<span class="text-emerald-400">${str}</span>`;
-      if (kw) return `<span class="text-sky-400">${kw}</span>`;
-      if (num) return `<span class="text-amber-400">${num}</span>`;
+      if (comment)
+        return `<span style="color:#5c5770;font-style:italic">${comment}</span>`;
+      if (str)
+        return `<span style="color:#5cb8c8">${str}</span>`;
+      if (kw)
+        return `<span style="color:#c9a84c">${kw}</span>`;
+      if (num)
+        return `<span style="color:#e8cd72">${num}</span>`;
       return match;
     }
   );
 }
 
-export default function CodeEditor({ value, onChange, onExecute, isExecuting }: CodeEditorProps) {
+export default function CodeEditor({
+  value,
+  onChange,
+  onExecute,
+  isExecuting,
+}: CodeEditorProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const highlightRef = useRef<HTMLDivElement>(null);
 
@@ -34,32 +43,52 @@ export default function CodeEditor({ value, onChange, onExecute, isExecuting }: 
       highlightRef.current.scrollTop = textareaRef.current.scrollTop;
       highlightRef.current.scrollLeft = textareaRef.current.scrollLeft;
     }
-  }, [value]);
+  });
 
   return (
-    <div className="flex flex-col h-full">
-      <div className="flex items-center justify-between px-4 py-2 border-b border-zinc-800 bg-zinc-900/50">
-        <span className="text-xs text-zinc-500 font-mono">main.ml</span>
+    <div className="flex flex-col h-full animate-fade-in">
+      <div className="flex items-center justify-between px-5 py-2.5 border-b border-border bg-surface/50">
+        <div className="flex items-center gap-2">
+          <svg className="w-3.5 h-3.5 text-gold-dim" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M17.25 6.75L22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3l-4.5 16.5" />
+          </svg>
+          <span className="text-xs text-text-muted font-mono tracking-wide">
+            main.ml
+          </span>
+        </div>
         <button
           onClick={onExecute}
           disabled={isExecuting || !value.trim()}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-emerald-600 hover:bg-emerald-500 disabled:bg-zinc-700 disabled:text-zinc-500 text-white transition-colors"
+          className="group relative flex items-center gap-2 px-4 py-1.5 text-xs font-medium rounded-lg
+                     bg-gold/15 text-gold-light border border-gold/20
+                     hover:bg-gold/25 hover:border-gold/40
+                     disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-gold/15 disabled:hover:border-gold/20
+                     transition-all duration-200"
         >
+          <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-transparent via-gold/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
           {isExecuting ? (
-            <span className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+            <>
+              <span className="relative w-3 h-3 border-2 border-gold-light/30 border-t-gold-light rounded-full animate-spin" />
+              <span className="relative">Ejecutando</span>
+            </>
           ) : (
-            <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 16 16">
-              <path d="M5 3l7 5-7 5V3z" />
-            </svg>
+            <>
+              <svg className="relative w-3.5 h-3.5" fill="currentColor" viewBox="0 0 16 16">
+                <path d="M5 3l7 5-7 5V3z" />
+              </svg>
+              <span className="relative">Ejecutar</span>
+              <span className="relative text-[9px] text-gold-dim hidden sm:inline">
+                ⌘⏎
+              </span>
+            </>
           )}
-          {isExecuting ? "Ejecutando..." : "Ejecutar"}
         </button>
       </div>
 
-      <div className="relative flex-1 overflow-hidden bg-zinc-950">
+      <div className="relative flex-1 overflow-hidden bg-bg">
         <div
           ref={highlightRef}
-          className="absolute inset-0 p-4 font-mono text-sm leading-relaxed pointer-events-none whitespace-pre-wrap break-words overflow-auto"
+          className="absolute inset-0 p-5 font-mono text-sm leading-relaxed pointer-events-none whitespace-pre-wrap break-words overflow-auto"
           dangerouslySetInnerHTML={{
             __html: highlightSyntax(value) || "\u00A0",
           }}
@@ -76,8 +105,10 @@ export default function CodeEditor({ value, onChange, onExecute, isExecuting }: 
               onExecute();
             }
           }}
-          className="absolute inset-0 w-full h-full p-4 font-mono text-sm leading-relaxed bg-transparent text-white caret-white resize-none outline-none border-none"
-          placeholder="-- Escribe tu código MathLite aquí...
+          className="absolute inset-0 w-full h-full p-5 font-mono text-sm leading-relaxed
+                     bg-transparent text-text resize-none outline-none border-none
+                     selection:bg-gold/20"
+          placeholder="-- Escribe tu codigo MathLite aqui...
 let x = 42
 print(x)
 

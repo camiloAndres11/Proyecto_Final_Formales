@@ -6,93 +6,124 @@ interface HistoryTableProps {
   onDelete: (id: string) => void;
 }
 
-export default function HistoryTable({ records, onSelect, onDelete }: HistoryTableProps) {
+export default function HistoryTable({
+  records,
+  onSelect,
+  onDelete,
+}: HistoryTableProps) {
   if (records.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-16 text-zinc-600">
-        <svg className="w-12 h-12 mb-3 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+      <div className="flex flex-col items-center justify-center py-20 animate-fade-in">
+        <svg
+          className="w-14 h-14 mb-4 text-text-muted/20"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+          strokeWidth={1}
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+          />
         </svg>
-        <p className="text-sm">No hay ejecuciones registradas</p>
-        <p className="text-xs mt-1">Ejecuta código en el Playground para verlo aquí</p>
+        <p className="text-sm text-text-muted">
+          No hay ejecuciones registradas
+        </p>
+        <p className="text-xs text-text-muted/60 mt-1.5">
+          Ejecuta codigo en el Playground para verlo aqui
+        </p>
       </div>
     );
   }
 
   return (
-    <div className="overflow-x-auto">
+    <div className="overflow-x-auto animate-fade-in">
       <table className="w-full text-sm">
         <thead>
-          <tr className="border-b border-zinc-800">
-            <th className="text-left px-4 py-3 text-zinc-500 font-medium text-xs uppercase tracking-wider">
+          <tr className="border-b border-border">
+            <th className="text-left px-5 py-3.5 text-text-muted font-medium text-[10px] uppercase tracking-widest">
               Estado
             </th>
-            <th className="text-left px-4 py-3 text-zinc-500 font-medium text-xs uppercase tracking-wider">
+            <th className="text-left px-5 py-3.5 text-text-muted font-medium text-[10px] uppercase tracking-widest">
               Código
             </th>
-            <th className="text-left px-4 py-3 text-zinc-500 font-medium text-xs uppercase tracking-wider">
+            <th className="text-left px-5 py-3.5 text-text-muted font-medium text-[10px] uppercase tracking-widest">
               Output
             </th>
-            <th className="text-left px-4 py-3 text-zinc-500 font-medium text-xs uppercase tracking-wider">
+            <th className="text-left px-5 py-3.5 text-text-muted font-medium text-[10px] uppercase tracking-widest">
               Tiempo
             </th>
-            <th className="text-left px-4 py-3 text-zinc-500 font-medium text-xs uppercase tracking-wider">
+            <th className="text-left px-5 py-3.5 text-text-muted font-medium text-[10px] uppercase tracking-widest">
               Fecha
             </th>
-            <th className="text-right px-4 py-3 text-zinc-500 font-medium text-xs uppercase tracking-wider">
+            <th className="text-right px-5 py-3.5 text-text-muted font-medium text-[10px] uppercase tracking-widest">
               Acciones
             </th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-zinc-800/50">
-          {records.map((record) => (
+        <tbody className="divide-y divide-border/40">
+          {records.map((record, i) => (
             <tr
               key={record.id}
-              className="hover:bg-zinc-900/30 cursor-pointer transition-colors"
+              className="hover:bg-gold/[0.015] cursor-pointer transition-colors group"
               onClick={() => onSelect(record.id)}
+              style={{ animationDelay: `${i * 0.03}s` }}
             >
-              <td className="px-4 py-3">
+              <td className="px-5 py-3.5">
                 <span
-                  className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium ${
+                  className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-medium ${
                     record.success
-                      ? "bg-emerald-500/10 text-emerald-400"
-                      : "bg-red-500/10 text-red-400"
+                      ? "bg-gold/10 text-gold-light"
+                      : "bg-error/10 text-error"
                   }`}
                 >
                   <span
                     className={`w-1.5 h-1.5 rounded-full ${
-                      record.success ? "bg-emerald-500" : "bg-red-500"
+                      record.success
+                        ? "bg-gold shadow-[0_0_4px_rgba(201,168,76,0.4)]"
+                        : "bg-error shadow-[0_0_4px_rgba(200,90,90,0.4)]"
                     }`}
                   />
                   {record.success ? "Éxito" : "Error"}
                 </span>
               </td>
-              <td className="px-4 py-3 max-w-[300px]">
-                <code className="text-xs text-zinc-300 font-mono truncate block">
+              <td className="px-5 py-3.5 max-w-[300px]">
+                <code className="text-xs text-text-secondary font-mono truncate block group-hover:text-text transition-colors">
                   {record.code.split("\n")[0]}
                   {record.code.includes("\n") ? " ..." : ""}
                 </code>
               </td>
-              <td className="px-4 py-3 text-zinc-400 text-xs max-w-[200px] truncate">
+              <td className="px-5 py-3.5 text-text-muted text-xs max-w-[200px] truncate">
                 {record.output.join(", ") || "—"}
               </td>
-              <td className="px-4 py-3 text-zinc-500 text-xs font-mono">
+              <td className="px-5 py-3.5 text-text-muted text-xs font-mono">
                 {record.executionTimeMs}ms
               </td>
-              <td className="px-4 py-3 text-zinc-500 text-xs">
+              <td className="px-5 py-3.5 text-text-muted text-xs">
                 {new Date(record.createdAt).toLocaleString()}
               </td>
-              <td className="px-4 py-3 text-right">
+              <td className="px-5 py-3.5 text-right">
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
                     onDelete(record.id);
                   }}
-                  className="text-zinc-600 hover:text-red-400 transition-colors p-1"
+                  className="text-text-muted/50 hover:text-error transition-all duration-200 p-1.5 rounded-md hover:bg-error/10"
                   title="Eliminar"
                 >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    strokeWidth={1.5}
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"
+                    />
                   </svg>
                 </button>
               </td>

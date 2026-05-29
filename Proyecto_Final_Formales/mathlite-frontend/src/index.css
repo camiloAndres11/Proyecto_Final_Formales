@@ -1,7 +1,52 @@
 @import "tailwindcss";
 
+@theme {
+  --color-bg: #07060d;
+  --color-surface: #0d0c17;
+  --color-surface-raised: #151328;
+  --color-surface-hover: #1d1a36;
+  --color-border: #1e1b36;
+  --color-border-light: #2a2647;
+  --color-gold: #c9a84c;
+  --color-gold-light: #e8cd72;
+  --color-gold-dim: #8b7535;
+  --color-teal: #5cb8c8;
+  --color-text: #e8e3d7;
+  --color-text-secondary: #8b8698;
+  --color-text-muted: #5c5770;
+  --color-error: #c85a5a;
+  --color-success: #5ac8a5;
+
+  --font-display: "Fraunces", ui-serif, serif;
+  --font-sans: "DM Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+}
+
 :root {
   color-scheme: dark;
+  --grid-color: rgba(30, 27, 54, 0.4);
+  --noise-svg: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.045'/%3E%3C/svg%3E");
+}
+
+[data-theme="light"] {
+  color-scheme: light;
+  --color-bg: #f5f0e8;
+  --color-surface: #ede6d8;
+  --color-surface-raised: #e0d8c8;
+  --color-surface-hover: #d5ccb8;
+  --color-border: #d0c8b8;
+  --color-border-light: #bfb5a0;
+  --color-gold: #b8943c;
+  --color-gold-light: #8a7028;
+  --color-gold-dim: #a08850;
+  --color-teal: #3a8898;
+  --color-text: #1a1610;
+  --color-text-secondary: #5a5450;
+  --color-text-muted: #8a8480;
+  --color-error: #b84a4a;
+  --color-success: #4ab88a;
+  --grid-color: rgba(160, 140, 120, 0.25);
+  --noise-svg: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
 }
 
 html {
@@ -11,12 +56,17 @@ html {
 
 body {
   margin: 0;
-  background: #09090b;
+  background: var(--color-bg, #07060d);
+  font-family: var(--font-sans);
+}
+
+#root {
+  min-height: 100vh;
 }
 
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 
 ::-webkit-scrollbar-track {
@@ -24,19 +74,93 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #27272a;
+  background: var(--color-border-light, #2a2647);
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #3f3f46;
+  background: var(--color-text-muted, #5c5770);
 }
 
 textarea {
-  caret-color: white;
+  caret-color: var(--color-gold, #c9a84c);
 }
 
 ::selection {
-  background: rgba(52, 211, 153, 0.2);
-  color: white;
+  background: color-mix(in srgb, var(--color-gold, #c9a84c) 20%, transparent);
+  color: var(--color-text, #e8e3d7);
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slide-right {
+  from { opacity: 0; transform: translateX(-8px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 0 8px color-mix(in srgb, var(--color-gold, #c9a84c) 15%, transparent); }
+  50% { box-shadow: 0 0 20px color-mix(in srgb, var(--color-gold, #c9a84c) 30%, transparent); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.5s ease-out forwards;
+}
+
+.animate-slide-up {
+  animation: slide-up 0.5s ease-out forwards;
+}
+
+.animate-slide-right {
+  animation: slide-right 0.4s ease-out forwards;
+}
+
+.animate-glow-pulse {
+  animation: glow-pulse 2s ease-in-out infinite;
+}
+
+.animate-shimmer {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    color-mix(in srgb, var(--color-gold, #c9a84c) 8%, transparent) 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 3s ease-in-out infinite;
+}
+
+.stagger-1 { animation-delay: 0.05s; }
+.stagger-2 { animation-delay: 0.1s; }
+.stagger-3 { animation-delay: 0.15s; }
+.stagger-4 { animation-delay: 0.2s; }
+.stagger-5 { animation-delay: 0.25s; }
+.stagger-6 { animation-delay: 0.3s; }
+.stagger-7 { animation-delay: 0.35s; }
+.stagger-8 { animation-delay: 0.4s; }
+
+.bg-noise {
+  background-image: var(--noise-svg);
+  background-repeat: repeat;
+  background-size: 256px 256px;
+}
+
+.bg-grid {
+  background-image:
+    linear-gradient(var(--grid-color) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+  background-size: 48px 48px;
 }
