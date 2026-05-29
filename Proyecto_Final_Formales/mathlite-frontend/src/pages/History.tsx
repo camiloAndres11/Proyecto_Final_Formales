@@ -1,9 +1,11 @@
 import { useNavigate } from "react-router-dom";
 import { useHistory, useDeleteHistory } from "../hooks/useHistory";
 import HistoryTable from "../components/HistoryTable";
+import { useEditorStore } from "../store/editorStore";
 
 export default function History() {
   const navigate = useNavigate();
+  const setCode = useEditorStore((s) => s.setCode);
   const { data: records, isLoading, error } = useHistory();
   const deleteMutation = useDeleteHistory();
 
@@ -15,6 +17,11 @@ export default function History() {
     if (confirm("¿Eliminar este registro?")) {
       deleteMutation.mutate(id);
     }
+  };
+
+  const handleLoadCode = (code: string) => {
+    setCode(code);
+    navigate("/");
   };
 
   return (
@@ -55,6 +62,7 @@ export default function History() {
             records={records || []}
             onSelect={handleSelect}
             onDelete={handleDelete}
+            onLoadCode={handleLoadCode}
           />
         )}
       </div>
