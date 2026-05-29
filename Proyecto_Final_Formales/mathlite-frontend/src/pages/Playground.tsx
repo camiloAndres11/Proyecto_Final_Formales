@@ -52,7 +52,7 @@ export default function Playground() {
                 onClick={() => setActiveTab(tab.id)}
                 className={`relative flex items-center gap-2 px-4 py-2.5 text-xs font-medium transition-all duration-200 ${
                   isActive
-                    ? "text-gold-light bg-gold/[0.04] shadow-[inset_0_1px_0_rgba(201,168,76,0.3)]"
+                    ? "text-gold-light bg-gold/[0.04] shadow-[var(--shadow-tab-active)]"
                     : "text-text-muted hover:text-text-secondary"
                 }`}
               >

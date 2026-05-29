@@ -83,8 +83,8 @@ export default function HistoryTable({
                   <span
                     className={`w-1.5 h-1.5 rounded-full ${
                       record.success
-                        ? "bg-gold shadow-[0_0_4px_rgba(201,168,76,0.4)]"
-                        : "bg-error shadow-[0_0_4px_rgba(200,90,90,0.4)]"
+                        ? "bg-gold shadow-[var(--glow-badge)]"
+                        : "bg-error shadow-[var(--glow-error-sm)]"
                     }`}
                   />
                   {record.success ? "Éxito" : "Error"}

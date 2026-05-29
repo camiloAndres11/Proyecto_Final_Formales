@@ -44,7 +44,7 @@ export default function Sidebar({ onSelectExample }: SidebarProps) {
 
       <div className="relative p-5 border-b border-border">
         <div className="flex items-center gap-2.5 mb-0.5">
-          <span className="w-2 h-2 rounded-full bg-gold shadow-[0_0_6px_rgba(201,168,76,0.5)]" />
+          <span className="w-2 h-2 rounded-full bg-gold shadow-[var(--glow-dot)]" />
           <h1 className="text-lg font-display font-semibold tracking-tight text-text">
             MathLite
           </h1>
@@ -61,7 +61,7 @@ export default function Sidebar({ onSelectExample }: SidebarProps) {
             cn(
               "flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-all duration-200",
               isActive
-                ? "text-gold-light bg-gold/10 shadow-[inset_0_0_0_1px_rgba(201,168,76,0.15)]"
+                ? "text-gold-light bg-gold/10 shadow-[var(--shadow-active)]"
                 : "text-text-muted hover:text-text-secondary hover:bg-surface-hover"
             )
           }
@@ -77,7 +77,7 @@ export default function Sidebar({ onSelectExample }: SidebarProps) {
             cn(
               "flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-all duration-200",
               isActive
-                ? "text-gold-light bg-gold/10 shadow-[inset_0_0_0_1px_rgba(201,168,76,0.15)]"
+                ? "text-gold-light bg-gold/10 shadow-[var(--shadow-active)]"
                 : "text-text-muted hover:text-text-secondary hover:bg-surface-hover"
             )
           }

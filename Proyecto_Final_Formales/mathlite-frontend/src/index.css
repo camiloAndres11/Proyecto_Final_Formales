@@ -1,21 +1,21 @@
 @import "tailwindcss";
 
 @theme {
-  --color-bg: #07060d;
-  --color-surface: #0d0c17;
-  --color-surface-raised: #151328;
-  --color-surface-hover: #1d1a36;
-  --color-border: #1e1b36;
-  --color-border-light: #2a2647;
-  --color-gold: #c9a84c;
-  --color-gold-light: #e8cd72;
-  --color-gold-dim: #8b7535;
-  --color-teal: #5cb8c8;
-  --color-text: #e8e3d7;
-  --color-text-secondary: #8b8698;
-  --color-text-muted: #5c5770;
-  --color-error: #c85a5a;
-  --color-success: #5ac8a5;
+  --color-bg: #222831;
+  --color-surface: #2a3038;
+  --color-surface-raised: #31363f;
+  --color-surface-hover: #3a414a;
+  --color-border: #3a414a;
+  --color-border-light: #4a515c;
+  --color-gold: #76abae;
+  --color-gold-light: #8fc5c8;
+  --color-gold-dim: #5a8f92;
+  --color-teal: #76abae;
+  --color-text: #eeeeee;
+  --color-text-secondary: #b0b8c0;
+  --color-text-muted: #7a8288;
+  --color-error: #d46a6a;
+  --color-success: #5abfa5;
 
   --font-display: "Fraunces", ui-serif, serif;
   --font-sans: "DM Sans", ui-sans-serif, system-ui, sans-serif;
@@ -24,28 +24,34 @@
 
 :root {
   color-scheme: dark;
-  --grid-color: rgba(30, 27, 54, 0.4);
+  --grid-color: rgba(118, 171, 174, 0.12);
   --noise-svg: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.045'/%3E%3C/svg%3E");
+  --glow-dot: 0 0 6px color-mix(in srgb, var(--color-gold) 50%, transparent);
+  --glow-badge: 0 0 4px color-mix(in srgb, var(--color-gold) 40%, transparent);
+  --glow-error: 0 0 6px color-mix(in srgb, var(--color-error) 50%, transparent);
+  --glow-error-sm: 0 0 4px color-mix(in srgb, var(--color-error) 40%, transparent);
+  --shadow-active: inset 0 0 0 1px color-mix(in srgb, var(--color-gold) 15%, transparent);
+  --shadow-tab-active: inset 0 1px 0 color-mix(in srgb, var(--color-gold) 30%, transparent);
 }
 
 [data-theme="light"] {
   color-scheme: light;
-  --color-bg: #f5f0e8;
-  --color-surface: #ede6d8;
-  --color-surface-raised: #e0d8c8;
-  --color-surface-hover: #d5ccb8;
-  --color-border: #d0c8b8;
-  --color-border-light: #bfb5a0;
-  --color-gold: #b8943c;
-  --color-gold-light: #8a7028;
-  --color-gold-dim: #a08850;
-  --color-teal: #3a8898;
-  --color-text: #1a1610;
-  --color-text-secondary: #5a5450;
-  --color-text-muted: #8a8480;
+  --color-bg: #eeeeee;
+  --color-surface: #e0e3e8;
+  --color-surface-raised: #d0d5db;
+  --color-surface-hover: #c5cad2;
+  --color-border: #c5cad2;
+  --color-border-light: #b0b5bc;
+  --color-gold: #5a9a9d;
+  --color-gold-light: #76abae;
+  --color-gold-dim: #4a7a7d;
+  --color-teal: #5a9a9d;
+  --color-text: #222831;
+  --color-text-secondary: #4a5058;
+  --color-text-muted: #7a8088;
   --color-error: #b84a4a;
   --color-success: #4ab88a;
-  --grid-color: rgba(160, 140, 120, 0.25);
+  --grid-color: rgba(34, 40, 49, 0.08);
   --noise-svg: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
 }
 
@@ -56,7 +62,7 @@ html {
 
 body {
   margin: 0;
-  background: var(--color-bg, #07060d);
+  background: var(--color-bg, #222831);
   font-family: var(--font-sans);
 }
 
@@ -74,21 +80,21 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--color-border-light, #2a2647);
+  background: var(--color-border-light, #4a515c);
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--color-text-muted, #5c5770);
+  background: var(--color-text-muted, #7a8288);
 }
 
 textarea {
-  caret-color: var(--color-gold, #c9a84c);
+  caret-color: var(--color-gold, #76abae);
 }
 
 ::selection {
-  background: color-mix(in srgb, var(--color-gold, #c9a84c) 20%, transparent);
-  color: var(--color-text, #e8e3d7);
+  background: color-mix(in srgb, var(--color-gold, #76abae) 20%, transparent);
+  color: var(--color-text, #eeeeee);
 }
 
 @keyframes fade-in {
@@ -107,8 +113,8 @@ textarea {
 }
 
 @keyframes glow-pulse {
-  0%, 100% { box-shadow: 0 0 8px color-mix(in srgb, var(--color-gold, #c9a84c) 15%, transparent); }
-  50% { box-shadow: 0 0 20px color-mix(in srgb, var(--color-gold, #c9a84c) 30%, transparent); }
+  0%, 100% { box-shadow: 0 0 8px color-mix(in srgb, var(--color-gold, #76abae) 15%, transparent); }
+  50% { box-shadow: 0 0 20px color-mix(in srgb, var(--color-gold, #76abae) 30%, transparent); }
 }
 
 @keyframes shimmer {
@@ -136,7 +142,7 @@ textarea {
   background: linear-gradient(
     90deg,
     transparent 0%,
-    color-mix(in srgb, var(--color-gold, #c9a84c) 8%, transparent) 50%,
+    color-mix(in srgb, var(--color-gold, #76abae) 8%, transparent) 50%,
     transparent 100%
   );
   background-size: 200% 100%;

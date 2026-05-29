@@ -46,8 +46,8 @@ export default function OutputPanel({
           <span
             className={`relative w-2 h-2 rounded-full ${
               success
-                ? "bg-gold shadow-[0_0_6px_rgba(201,168,76,0.5)]"
-                : "bg-error shadow-[0_0_6px_rgba(200,90,90,0.5)]"
+                ? "bg-gold shadow-[var(--glow-dot)]"
+                : "bg-error shadow-[var(--glow-error)]"
             }`}
           />
           <span className="text-xs text-text-secondary font-mono">

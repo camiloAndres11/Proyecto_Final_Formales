@@ -119,8 +119,8 @@ export default function HistoryDetail() {
             <span
               className={`w-1.5 h-1.5 rounded-full ${
                 record.success
-                  ? "bg-gold shadow-[0_0_4px_rgba(201,168,76,0.4)]"
-                  : "bg-error shadow-[0_0_4px_rgba(200,90,90,0.4)]"
+                  ? "bg-gold shadow-[var(--glow-badge)]"
+                  : "bg-error shadow-[var(--glow-error-sm)]"
               }`}
             />
             {record.success ? "Exito" : "Error"} — {record.executionTimeMs}ms
@@ -163,7 +163,7 @@ export default function HistoryDetail() {
             onClick={() => setActiveTab(tab.id)}
             className={`px-4 py-2.5 text-xs font-medium transition-all duration-200 ${
               activeTab === tab.id
-                ? "text-gold-light bg-gold/[0.04] shadow-[inset_0_1px_0_rgba(201,168,76,0.3)]"
+                ? "text-gold-light bg-gold/[0.04] shadow-[var(--shadow-tab-active)]"
                 : "text-text-muted hover:text-text-secondary"
             }`}
           >
