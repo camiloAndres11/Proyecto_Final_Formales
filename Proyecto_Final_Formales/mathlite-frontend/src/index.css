@@ -1,20 +1,21 @@
 @import "tailwindcss";
 
 @theme {
-  --color-bg: #222831;
-  --color-surface: #2a3038;
-  --color-surface-raised: #31363f;
-  --color-surface-hover: #3a414a;
-  --color-border: #3a414a;
-  --color-border-light: #4a515c;
+  --color-bg: #121414;
+  --color-surface: #1e2020;
+  --color-surface-raised: #282a2b;
+  --color-surface-hover: #333535;
+  --color-border: #404849;
+  --color-border-light: #8a9293;
   --color-gold: #76abae;
-  --color-gold-light: #8fc5c8;
+  --color-gold-light: #9ad0d3;
   --color-gold-dim: #5a8f92;
   --color-teal: #76abae;
-  --color-text: #eeeeee;
-  --color-text-secondary: #b0b8c0;
-  --color-text-muted: #7a8288;
-  --color-error: #d46a6a;
+  --color-tertiary: #f7b999;
+  --color-text: #e2e2e2;
+  --color-text-secondary: #bfc8c8;
+  --color-text-muted: #8a9293;
+  --color-error: #ffb4ab;
   --color-success: #5abfa5;
 
   --font-display: "Fraunces", ui-serif, serif;
@@ -24,8 +25,8 @@
 
 :root {
   color-scheme: dark;
-  --grid-color: rgba(118, 171, 174, 0.12);
-  --noise-svg: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.045'/%3E%3C/svg%3E");
+  --grid-color: rgba(255, 255, 255, 0.03);
+  --noise-svg: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
   --glow-dot: 0 0 6px color-mix(in srgb, var(--color-gold) 50%, transparent);
   --glow-badge: 0 0 4px color-mix(in srgb, var(--color-gold) 40%, transparent);
   --glow-error: 0 0 6px color-mix(in srgb, var(--color-error) 50%, transparent);
@@ -36,23 +37,24 @@
 
 [data-theme="light"] {
   color-scheme: light;
-  --color-bg: #eeeeee;
-  --color-surface: #e0e3e8;
-  --color-surface-raised: #d0d5db;
-  --color-surface-hover: #c5cad2;
-  --color-border: #c5cad2;
-  --color-border-light: #b0b5bc;
-  --color-gold: #5a9a9d;
+  --color-bg: #e8eaea;
+  --color-surface: #d5d7d7;
+  --color-surface-raised: #c8caca;
+  --color-surface-hover: #bcbebe;
+  --color-border: #b0b2b2;
+  --color-border-light: #8a8c8c;
+  --color-gold: #5a8f92;
   --color-gold-light: #76abae;
   --color-gold-dim: #4a7a7d;
-  --color-teal: #5a9a9d;
-  --color-text: #222831;
-  --color-text-secondary: #4a5058;
-  --color-text-muted: #7a8088;
+  --color-teal: #5a8f92;
+  --color-tertiary: #a06b50;
+  --color-text: #1a1c1c;
+  --color-text-secondary: #3a3c3c;
+  --color-text-muted: #7a7c7c;
   --color-error: #b84a4a;
   --color-success: #4ab88a;
-  --grid-color: rgba(34, 40, 49, 0.08);
-  --noise-svg: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+  --grid-color: rgba(0, 0, 0, 0.06);
+  --noise-svg: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");
 }
 
 html {
@@ -62,7 +64,7 @@ html {
 
 body {
   margin: 0;
-  background: var(--color-bg, #222831);
+  background: var(--color-bg, #121414);
   font-family: var(--font-sans);
 }
 
@@ -80,12 +82,12 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--color-border-light, #4a515c);
+  background: var(--color-border-light, #8a9293);
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--color-text-muted, #7a8288);
+  background: var(--color-text-muted, #8a9293);
 }
 
 textarea {
@@ -94,7 +96,7 @@ textarea {
 
 ::selection {
   background: color-mix(in srgb, var(--color-gold, #76abae) 20%, transparent);
-  color: var(--color-text, #eeeeee);
+  color: var(--color-text, #e2e2e2);
 }
 
 @keyframes fade-in {
@@ -120,6 +122,12 @@ textarea {
 @keyframes shimmer {
   0% { background-position: -200% center; }
   100% { background-position: 200% center; }
+}
+
+@keyframes pulse-cta {
+  0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-gold) 40%, transparent); }
+  70% { box-shadow: 0 0 0 6px color-mix(in srgb, var(--color-gold) 0%, transparent); }
+  100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-gold) 0%, transparent); }
 }
 
 .animate-fade-in {
@@ -149,6 +157,10 @@ textarea {
   animation: shimmer 3s ease-in-out infinite;
 }
 
+.animate-pulse-cta {
+  animation: pulse-cta 2s infinite;
+}
+
 .stagger-1 { animation-delay: 0.05s; }
 .stagger-2 { animation-delay: 0.1s; }
 .stagger-3 { animation-delay: 0.15s; }
@@ -169,4 +181,22 @@ textarea {
     linear-gradient(var(--grid-color) 1px, transparent 1px),
     linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
   background-size: 48px 48px;
+}
+
+.active-line {
+  background-color: rgba(118, 171, 174, 0.1);
+}
+
+.code-cursor {
+  border-left: 2px solid var(--color-gold, #76abae);
+  animation: blink 1s step-end infinite;
+}
+
+@keyframes blink {
+  50% { border-color: transparent; }
+}
+
+.glow-pulse-cta {
+  box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-gold) 40%, transparent);
+  animation: pulse-cta 2s infinite;
 }
