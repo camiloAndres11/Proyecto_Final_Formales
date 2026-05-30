@@ -1,5 +1,7 @@
 package com.mathlite.lexer;
 
+import lombok.Getter;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -20,6 +22,11 @@ public class Lexer {
 
     private final String source;
     private final List<Token> tokens = new ArrayList<>();
+    /**
+     * -- GETTER --
+     *  Retorna los errores léxicos encontrados durante el escaneo.
+     */
+    @Getter
     private final List<String> errors = new ArrayList<>();
 
     private int start = 0;     // Inicio del lexema actual
@@ -73,13 +80,6 @@ public class Lexer {
 
         tokens.add(new Token(TokenType.EOF, "", line, column));
         return tokens;
-    }
-
-    /**
-     * Retorna los errores léxicos encontrados durante el escaneo.
-     */
-    public List<String> getErrors() {
-        return errors;
     }
 
     // ============================================================
