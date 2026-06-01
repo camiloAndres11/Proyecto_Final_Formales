@@ -129,7 +129,7 @@ public class Interpreter implements ASTVisitor<MathLiteValue> {
         try {
             callee = environment.get(node.name());
         } catch (RuntimeError e) {
-            throw new RuntimeError("Función '" + node.name() + "' no encontrada",
+            throw new RuntimeError("Funcion '" + node.name() + "' no se encontro en el entorno",
                 node.line(), node.column());
         }
 

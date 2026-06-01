@@ -3,6 +3,7 @@ FROM maven:3.9.6-eclipse-temurin-21 AS build
 WORKDIR /app
 # Copiar archivos del proyecto
 COPY pom.xml .
+ARG CACHEBUST=1
 COPY src ./src
 # Compilar el proyecto
 RUN mvn clean package -DskipTests
