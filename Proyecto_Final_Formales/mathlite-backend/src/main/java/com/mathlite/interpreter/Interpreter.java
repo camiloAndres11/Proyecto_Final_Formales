@@ -105,12 +105,10 @@ public class Interpreter implements ASTVisitor<MathLiteValue> {
 
     @Override
     public MathLiteValue visitFuncDef(FuncDefNode node) {
-        // Almacenar la definición de la función en el entorno actual
-        // La función captura el entorno actual (closure)
-        environment.define(node.name(), MathLiteValue.ofNull());
-        // Guardamos el nodo de la función como un valor especial
-        environment.define("__func__" + node.name(), MathLiteValue.ofString("FUNC_DEF"));
-        return MathLiteValue.ofNull();
+        // Guardar la función como un valor closure que captura el entorno actual.
+        MathLiteValue function = MathLiteValue.ofFunction(node, environment);
+        environment.define(node.name(), function);
+        return function;
     }
 
     @Override
@@ -126,9 +124,47 @@ public class Interpreter implements ASTVisitor<MathLiteValue> {
             return BuiltinFunctions.call(node.name(), args);
         }
 
-        // Buscar la definición de la función en el AST
-        // TODO: Implementar lookup de funciones definidas por el usuario
-        throw new RuntimeError("Función '" + node.name() + "' no encontrada", node.line(), node.column());
+        // Buscar la función definida por el usuario en el entorno
+        MathLiteValue callee;
+        try {
+            callee = environment.get(node.name());
+        } catch (RuntimeError e) {
+            throw new RuntimeError("Función '" + node.name() + "' no encontrada",
+                node.line(), node.column());
+        }
+
+        if (!callee.isFunction()) {
+            throw new RuntimeError("'" + node.name() + "' no es una función",
+                node.line(), node.column());
+        }
+
+        FuncDefNode def = callee.asFunction();
+
+        // Validar aridad
+        if (def.params().size() != args.size()) {
+            throw new RuntimeError("La función '" + node.name() + "' espera "
+                + def.params().size() + " argumento(s), recibió " + args.size(),
+                node.line(), node.column());
+        }
+
+        // Crear el scope de ejecución a partir del entorno de captura (closure)
+        Environment funcEnv = new Environment(callee.getClosure());
+        for (int i = 0; i < def.params().size(); i++) {
+            funcEnv.define(def.params().get(i), args.get(i));
+        }
+
+        // Ejecutar el cuerpo con el nuevo entorno, capturando el return
+        Environment prev = environment;
+        environment = funcEnv;
+        MathLiteValue result = MathLiteValue.ofNull();
+        try {
+            visitBlock(def.body());
+        } catch (ReturnException re) {
+            result = re.getValue();
+        } finally {
+            environment = prev;
+        }
+        return result;
     }
 
     @Override
